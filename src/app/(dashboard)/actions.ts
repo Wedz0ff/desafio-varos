@@ -1,7 +1,11 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { PrismaClient, UserType } from "../generated/prisma/client";
+import {
+  PrismaClient,
+  UserType as PrismaUserType,
+} from "../generated/prisma/client";
+import { UserType, CreateUserInput, UpdateUserInput } from "@/src/types/user";
 
 const prisma = new PrismaClient();
 
@@ -15,7 +19,7 @@ export type User = {
   cep: string;
   address: string;
   complement: string | null;
-  type: UserType;
+  type: PrismaUserType;
   consultantId: string | null;
   createdAt: Date;
   updatedAt: Date;
@@ -34,30 +38,13 @@ export type UserWithRelations = User & {
   }[];
 };
 
-export type CreateUserInput = {
-  name: string;
-  email: string;
-  phone: string;
-  age?: number;
-  cpf: string;
-  cep: string;
-  address: string;
-  complement?: string;
-  type: UserType;
-  consultantId?: string;
-};
-
-export type UpdateUserInput = Partial<CreateUserInput> & {
-  id: string;
-};
-
 /**
  * Get all users with optional filtering by type
  */
 export async function getUsers(type?: UserType): Promise<UserWithRelations[]> {
   try {
     const users = await prisma.user.findMany({
-      where: type ? { type } : undefined,
+      where: type ? { type: type as PrismaUserType } : undefined,
       include: {
         consultant: {
           select: {
@@ -126,7 +113,7 @@ export async function getUserById(
 export async function getConsultants() {
   try {
     const consultants = await prisma.user.findMany({
-      where: { type: UserType.CONSULTANT },
+      where: { type: PrismaUserType.CONSULTANT },
       include: {
         clients: {
           select: {
@@ -163,7 +150,7 @@ export async function createUser(data: CreateUserInput) {
         throw new Error("Consultant not found");
       }
 
-      if (consultant.type !== UserType.CONSULTANT) {
+      if (consultant.type !== PrismaUserType.CONSULTANT) {
         throw new Error("The specified user is not a consultant");
       }
     }
@@ -183,7 +170,7 @@ export async function createUser(data: CreateUserInput) {
         cep: data.cep,
         address: data.address,
         complement: data.complement,
-        type: data.type,
+        type: data.type as PrismaUserType,
         consultantId: data.consultantId,
       },
       include: {
@@ -235,7 +222,7 @@ export async function updateUser(data: UpdateUserInput) {
           throw new Error("Consultant not found");
         }
 
-        if (consultant.type !== UserType.CONSULTANT) {
+        if (consultant.type !== PrismaUserType.CONSULTANT) {
           throw new Error("The specified user is not a consultant");
         }
       }
@@ -243,7 +230,10 @@ export async function updateUser(data: UpdateUserInput) {
 
     const user = await prisma.user.update({
       where: { id },
-      data: updateData,
+      data: {
+        ...updateData,
+        type: updateData.type ? (updateData.type as PrismaUserType) : undefined,
+      },
       include: {
         consultant: {
           select: {
@@ -319,7 +309,7 @@ export async function getClientsByConsultant(consultantId: string) {
     const clients = await prisma.user.findMany({
       where: {
         consultantId,
-        type: UserType.CLIENT,
+        type: PrismaUserType.CLIENT,
       },
       orderBy: {
         name: "asc",

@@ -2,14 +2,11 @@
 
 import * as React from "react"
 import {
-  IconChevronDown,
   IconChevronLeft,
   IconChevronRight,
   IconChevronsLeft,
   IconChevronsRight,
-  IconDotsVertical,
-  IconLayoutColumns,
-  IconPlus,
+  IconDotsVertical
 } from "@tabler/icons-react"
 import {
   ColumnDef,
@@ -29,15 +26,14 @@ import {
 import { UserWithRelations } from "@/src/app/(dashboard)/actions"
 import { Button } from "@/src/components/ui/button"
 import { Checkbox } from "@/src/components/ui/checkbox"
+import { CreateUserModal } from "@/src/components/create-user-modal"
 import {
   DropdownMenu,
-  DropdownMenuCheckboxItem,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/src/components/ui/dropdown-menu"
-import { Input } from "@/src/components/ui/input"
 import { Label } from "@/src/components/ui/label"
 import {
   Select,
@@ -175,7 +171,7 @@ const columns: ColumnDef<UserWithRelations>[] = [
   },
 ]
 
-export function DataTable({ data }: { data: UserWithRelations[] }) {
+export function UsersTable({ data }: { data: UserWithRelations[] }) {
   const [rowSelection, setRowSelection] = React.useState({})
   const [columnVisibility, setColumnVisibility] =
     React.useState<VisibilityState>({})
@@ -217,10 +213,7 @@ export function DataTable({ data }: { data: UserWithRelations[] }) {
     <div className="flex w-full flex-col gap-4">
       <div className="flex items-center justify-end px-4 lg:px-6">
         <div className="flex items-center gap-2">
-          <Button variant="default" size="sm">
-            <IconPlus />
-            <span className="hidden lg:inline">Adicionar Usuário</span>
-          </Button>
+          <CreateUserModal />
         </div>
       </div>
 
