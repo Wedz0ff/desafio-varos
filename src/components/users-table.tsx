@@ -6,7 +6,9 @@ import {
   IconChevronRight,
   IconChevronsLeft,
   IconChevronsRight,
-  IconDotsVertical
+  IconDotsVertical,
+  IconFilter,
+  IconX,
 } from "@tabler/icons-react"
 import {
   ColumnDef,
@@ -23,7 +25,7 @@ import {
   VisibilityState,
 } from "@tanstack/react-table"
 
-import { UserWithRelations } from "@/src/app/(dashboard)/actions"
+import { UserWithRelations, getConsultants } from "@/src/app/(dashboard)/actions"
 import { Button } from "@/src/components/ui/button"
 import { Checkbox } from "@/src/components/ui/checkbox"
 import { CreateUserModal } from "@/src/components/create-user-modal"
@@ -50,6 +52,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/src/components/ui/table"
+import { Badge } from "@/src/components/ui/badge"
 
 const columns: ColumnDef<UserWithRelations>[] = [
   {
@@ -121,6 +124,24 @@ const columns: ColumnDef<UserWithRelations>[] = [
     ),
   },
   {
+    accessorKey: "consultant",
+    header: "Consultor",
+    cell: ({ row }) => {
+      const consultant = row.original.consultant
+      return consultant ? (
+        <Badge variant="secondary" className="text-xs">
+          {consultant.name}
+        </Badge>
+      ) : (
+        <span className="text-muted-foreground text-xs">-</span>
+      )
+    },
+    filterFn: (row, id, value) => {
+      if (!value || value === "all") return true
+      return row.original.consultantId === value
+    },
+  },
+  {
     accessorKey: "createdAt",
     header: "Criado em",
     cell: ({ row }) => (
@@ -148,7 +169,7 @@ const columns: ColumnDef<UserWithRelations>[] = [
   },
   {
     id: "actions",
-    cell: ({ row }) => (
+    cell: () => (
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button
@@ -183,6 +204,37 @@ export function UsersTable({ data }: { data: UserWithRelations[] }) {
     pageIndex: 0,
     pageSize: 10,
   })
+  const [consultants, setConsultants] = React.useState<
+    Array<{ id: string; name: string; email: string }>
+  >([])
+  const [selectedConsultant, setSelectedConsultant] = React.useState<string>("all")
+
+  // Load consultants on mount
+  React.useEffect(() => {
+    getConsultants().then((data) => {
+      setConsultants(data)
+    }).catch((error) => {
+      console.error("Error loading consultants:", error)
+    })
+  }, [])
+
+  // Handle consultant filter change
+  const handleConsultantFilter = (value: string) => {
+    setSelectedConsultant(value)
+    if (value === "all") {
+      table.getColumn("consultant")?.setFilterValue(undefined)
+    } else {
+      table.getColumn("consultant")?.setFilterValue(value)
+    }
+  }
+
+  // Clear all filters
+  const clearFilters = () => {
+    setSelectedConsultant("all")
+    table.resetColumnFilters()
+  }
+
+  const hasActiveFilters = selectedConsultant !== "all"
 
   const table = useReactTable({
     data,
@@ -211,7 +263,28 @@ export function UsersTable({ data }: { data: UserWithRelations[] }) {
 
   return (
     <div className="flex w-full flex-col gap-4">
-      <div className="flex items-center justify-end px-4 lg:px-6">
+      <div className="flex items-center justify-between px-4 lg:px-6">
+        <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2">
+            <IconFilter className="text-muted-foreground size-4" />
+            <Label htmlFor="consultant-filter" className="text-sm font-medium">
+              Filtrar por consultor:
+            </Label>
+          </div>
+          <Select value={selectedConsultant} onValueChange={handleConsultantFilter}>
+            <SelectTrigger id="consultant-filter" className="w-[200px]">
+              <SelectValue placeholder="Todos os consultores" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos os consultores</SelectItem>
+              {consultants.map((consultant) => (
+                <SelectItem key={consultant.id} value={consultant.id}>
+                  {consultant.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
         <div className="flex items-center gap-2">
           <CreateUserModal />
         </div>
