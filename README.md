@@ -1,36 +1,102 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Desafio Varos
 
-## Getting Started
+## ✨ Funcionalidades
 
-First, run the development server:
+### Gerenciamento de Usuários
+
+- ✅ Listagem de usuários com tabela interativa
+- ✅ Criação de novos usuários
+- ✅ Edição de usuários existentes
+- ✅ Filtro por consultor
+
+### Tipos de Usuário
+
+- **Consultores**: Podem ter múltiplos clientes associados
+- **Clientes**: Podem estar vinculados a um consultor
+
+### Validações e Formatações
+
+- 📱 **Telefone**: Formato brasileiro `(00) 00000-0000`
+- 📄 **CPF**: Formato `000.000.000-00` com validação
+- 📍 **CEP**: Formato `00000-000` com autocomplete via ViaCEP
+- 📧 **Email**: Validação de formato e unicidade
+- 🎂 **Idade**: Validação de valores numéricos
+
+## 🔧 Instalação
+
+1. **Clone o repositório**
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+git clone git@github.com:Wedz0ff/desafio-varos.git
+cd desafio-varos
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+2. **Instale as dependências**
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+pnpm i
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+3. **Configure as variáveis de ambiente**
 
-## Learn More
+Crie um arquivo `.env` na raiz do projeto:
 
-To learn more about Next.js, take a look at the following resources:
+```env
+DATABASE_URL="postgresql://usuario:senha@localhost:5432/desafio_varos?schema=public"
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+4. **Execute as migrations do banco de dados**
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```bash
+pnpm prisma migrate dev
+```
 
-## Deploy on Vercel
+5. **Popule o banco com dados de exemplo (opcional)**
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```bash
+pnpm prisma db seed
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## 🚀 Executando o Projeto
+
+### Modo Desenvolvimento
+
+```bash
+pnpm dev
+```
+
+Acesse [http://localhost:3000](http://localhost:3000)
+
+### Build de Produção
+
+```bash
+pnpm build
+pnpm start
+```
+
+## 🔑 Funcionalidades Técnicas
+
+### Server Actions
+
+Todas as operações de banco de dados utilizam Next.js Server Actions:
+
+- `getUsers()` - Lista usuários com filtros opcionais
+- `getUserById(id)` - Busca usuário específico
+- `createUser(data)` - Cria novo usuário
+- `updateUser(data)` - Atualiza usuário existente
+- `deleteUser(id)` - Remove usuário
+- `getConsultants()` - Lista apenas consultores
+- `getClientsByConsultant(id)` - Lista clientes de um consultor
+
+### Validações
+
+- CPF e Email únicos no banco de dados
+- Validação de consultor ao associar cliente
+- Impedimento de deleção de consultor com clientes ativos
+- Formatação em tempo real nos inputs
+
+### Estado e Cache
+
+- `revalidatePath("/")` após mutações
+- State management com React hooks
+- Otimização de re-renders com useMemo
